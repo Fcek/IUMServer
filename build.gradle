@@ -55,11 +55,6 @@ startScripts {
     mainClassName = project.mainClassName
 }
 
-task oneJar(type: OneJar) {
-    mainClass = project.mainClassName
-    useStable = false
-}
-
 mainClassName = 'ManageApplication'
 
 // Configure the run task to start the Dropwizard service
@@ -67,18 +62,3 @@ run {
     args 'server', './src/dist/config/development.yml'
     main = project.mainClassName
 }
-task migrate(type: JavaExec) {
-    args 'db', 'migrate', './src/dist/config/development.yml'
-    main = project.mainClassName
-    classpath = project.sourceSets.main.runtimeClasspath
-}
-task deployJar(type: OneJar) {
-    mainClass = project.mainClassName
-}
-
-
-artifacts {
-    oneJar
-}
-
-build.dependsOn 'oneJar'

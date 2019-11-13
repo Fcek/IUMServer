@@ -4,6 +4,7 @@ import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import resources.MainResource;
 
 public class ManageApplication extends Application<ManageConfiguration> {
 
@@ -27,6 +28,11 @@ public class ManageApplication extends Application<ManageConfiguration> {
     public void run(ManageConfiguration configuration, Environment environment) throws Exception {
         final AccountDAO accountDAO = new AccountDAO(hibernate.getSessionFactory());
         environment.jersey().register(accountDAO);
+
+        final MainResource mainResource = new MainResource(accountDAO);
+
+        environment.jersey().register(mainResource);
+
     }
 
 }
