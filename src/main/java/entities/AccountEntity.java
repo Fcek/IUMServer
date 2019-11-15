@@ -1,11 +1,9 @@
-package db;
+package entities;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Date;
-
+@Table(name = "account")
+@Entity
 public class AccountEntity {
 
     @Id
@@ -18,16 +16,16 @@ public class AccountEntity {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "salt", nullable = false)
+    @Column(name = "salt")
     private String salt;
 
     @Column(name = "active", nullable = false)
     private boolean active;
 
-    @Column(name = "activation_hash", nullable = false)
+    @Column(name = "activation_hash")
     private String activationHash;
 
-    @Column(name = "created", nullable = false)
+    @Column(name = "created")
     private Date created;
 
     public long getId() {

@@ -40,10 +40,10 @@ dependencies {
             'io.dropwizard:dropwizard-testing:'+ dropwizardVersion,
             'io.dropwizard:dropwizard-forms:' + dropwizardVersion,
             'com.google.guava:guava:24.1-jre',
-            'com.squareup.retrofit2:retrofit:2.3.0',
-            'com.squareup.retrofit2:converter-gson:2.3.0',
-            'com.squareup.retrofit2:converter-jackson:2.3.0',
-            'org.postgresql:postgresql:42.2.0',)
+            'com.squareup.retrofit2:retrofit:2.4.0',
+            'com.squareup.retrofit2:converter-gson:2.4.0',
+            'com.squareup.retrofit2:converter-jackson:2.4.0',
+            'org.postgresql:postgresql:42.2.0')
 }
 
 

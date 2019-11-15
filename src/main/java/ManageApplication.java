@@ -1,4 +1,6 @@
 import db.AccountDAO;
+import db.ProductDAO;
+import db.RoleDAO;
 import io.dropwizard.Application;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
@@ -8,7 +10,7 @@ import resources.MainResource;
 
 public class ManageApplication extends Application<ManageConfiguration> {
 
-    private final HibernateBundle<ManageConfiguration> hibernate = new HibernateBundle<ManageConfiguration>(AccountDAO.class) {
+    private final HibernateBundle<ManageConfiguration> hibernate = new HibernateBundle<ManageConfiguration>(AccountDAO.class, RoleDAO.class, ProductDAO.class) {
         @Override
         public DataSourceFactory getDataSourceFactory(ManageConfiguration configuration) {
             return configuration.getDataSourceFactory();
@@ -27,9 +29,14 @@ public class ManageApplication extends Application<ManageConfiguration> {
     @Override
     public void run(ManageConfiguration configuration, Environment environment) throws Exception {
         final AccountDAO accountDAO = new AccountDAO(hibernate.getSessionFactory());
-        environment.jersey().register(accountDAO);
+        final RoleDAO roleDAO = new RoleDAO(hibernate.getSessionFactory());
+        final ProductDAO productDAO = new ProductDAO(hibernate.getSessionFactory());
 
-        final MainResource mainResource = new MainResource(accountDAO);
+        environment.jersey().register(accountDAO);
+        environment.jersey().register(roleDAO);
+        environment.jersey().register(productDAO);
+
+        final MainResource mainResource = new MainResource(accountDAO, roleDAO, productDAO);
 
         environment.jersey().register(mainResource);
 
