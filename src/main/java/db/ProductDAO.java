@@ -1,6 +1,5 @@
 package db;
 
-import entities.AccountEntity;
 import entities.ProductEntity;
 import io.dropwizard.hibernate.AbstractDAO;
 import org.hibernate.SessionFactory;

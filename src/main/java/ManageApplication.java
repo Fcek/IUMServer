@@ -1,16 +1,20 @@
 import db.AccountDAO;
 import db.ProductDAO;
 import db.RoleDAO;
+import entities.AccountEntity;
+import entities.ProductEntity;
+import entities.RoleEntity;
 import io.dropwizard.Application;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.hibernate.SessionFactory;
 import resources.MainResource;
 
 public class ManageApplication extends Application<ManageConfiguration> {
 
-    private final HibernateBundle<ManageConfiguration> hibernate = new HibernateBundle<ManageConfiguration>(AccountDAO.class, RoleDAO.class, ProductDAO.class) {
+    private final HibernateBundle<ManageConfiguration> hibernate = new HibernateBundle<ManageConfiguration>(ProductEntity.class, AccountEntity.class, RoleEntity.class) {
         @Override
         public DataSourceFactory getDataSourceFactory(ManageConfiguration configuration) {
             return configuration.getDataSourceFactory();

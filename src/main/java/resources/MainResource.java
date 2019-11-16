@@ -1,18 +1,18 @@
 package resources;
 
 
-import com.codahale.metrics.annotation.Timed;
+import core.Account;
 import db.AccountDAO;
 import db.ProductDAO;
-import entities.AccountEntity;
 import db.RoleDAO;
+import entities.AccountEntity;
 import entities.ProductEntity;
-import entities.RoleEntity;
 import io.dropwizard.hibernate.UnitOfWork;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.Date;
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
@@ -46,24 +46,37 @@ public class MainResource {
 //        }
 //    }
 
-    @POST
-    @Path("abc")
+    @GET
+    @Path("product")
     @UnitOfWork
-    @Timed
-    public Response acc(){
-        AccountEntity accountEntity = new AccountEntity();
-        accountEntity.setEmail("abc");
-        accountEntity.setPassword("abc");
-        accountEntity.setActive(true);
-        accountEntity.setSalt("abc");
-        RoleEntity roleEntity = new RoleEntity();
-        roleEntity.setName("admin");
+    public ProductEntity acc(@QueryParam("q") int id){
+//        AccountEntity accountEntity = new AccountEntity();
+//        accountEntity.setEmail("abc");
+//        accountEntity.setPassword("abc");
+//        accountEntity.setActive(true);
+//        accountEntity.setSalt("abc");
+//        RoleEntity roleEntity = new RoleEntity();
+//        roleEntity.setName("admin");
         ProductEntity productEntity = new ProductEntity();
         productEntity.setName("abc");
         productEntity.setManufacturer("abc");
         productEntity.setPrice((float) 10.5);
         productEntity.setAmount(100);
-        productDAO.create(productEntity);
-        return Response.accepted().build();
+        //productDAO.create(productEntity);
+        return productDAO.findById((long) 1);
+    }
+
+    @POST
+    @Path("create/account")
+    @UnitOfWork
+    public Account createAccount(Account account){
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setEmail(account.getEmail());
+        accountEntity.setPassword(account.getPassword());
+        accountEntity.setCreated(new Date());
+        accountEntity.setActive(true);
+        accountEntity.setSalt("adssfgasdas");
+        accountDAO.create(accountEntity);
+        return account;
     }
 }
