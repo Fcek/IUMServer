@@ -4,6 +4,8 @@ import entities.ProductEntity;
 import io.dropwizard.hibernate.AbstractDAO;
 import org.hibernate.SessionFactory;
 
+import java.util.List;
+
 public class ProductDAO extends AbstractDAO<ProductEntity> {
     /**
      * Creates a new DAO with a given session provider.
@@ -16,6 +18,10 @@ public class ProductDAO extends AbstractDAO<ProductEntity> {
 
     public ProductEntity findById(Long id) {
         return get(id);
+    }
+
+    public List<ProductEntity> findAll() {
+        return list(namedQuery("db.productEntity.findAll"));
     }
 
     public ProductEntity create(ProductEntity productEntity) {

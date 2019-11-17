@@ -1,82 +1,152 @@
 package resources;
 
 
+import com.codahale.metrics.annotation.Timed;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
 import core.Account;
+import core.Product;
 import db.AccountDAO;
+import db.GoogleDAO;
 import db.ProductDAO;
-import db.RoleDAO;
 import entities.AccountEntity;
+import entities.GoogleEntity;
 import entities.ProductEntity;
+import exceptions.GeneralAccountProblemException;
 import io.dropwizard.hibernate.UnitOfWork;
+import wrapper.Wrapper;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
+
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public class MainResource {
     private final AccountDAO accountDAO;
-    private final RoleDAO roleDAO;
     private final ProductDAO productDAO;
+    final NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
+    private final GoogleDAO googleDAO;
 
-    public MainResource(AccountDAO accountDAO, RoleDAO roleDAO, ProductDAO productDAO) {
+    public MainResource(AccountDAO accountDAO, ProductDAO productDAO, GoogleDAO googleDAO) throws GeneralSecurityException, IOException {
         this.accountDAO = accountDAO;
-        this.roleDAO = roleDAO;
         this.productDAO = productDAO;
+        this.googleDAO = googleDAO;
     }
-
-//    @POST
-//    @Consumes(MediaType.MULTIPART_FORM_DATA)
-//    @Path("register")
-//    @UnitOfWork
-//    public Object createAccount(@FormDataParam("username") String email,
-//                                @FormDataParam("password") String password,
-//                                @FormDataParam("confirm_password") String confirmPassword) {
-//        try {
-//            accountService.registerAccount(email, password, confirmPassword); //3rd parameter sets default role for new users
-//            return Response.seeOther(URI.create("/login")).build();
-//        } catch (BadPasswordException e) {
-//            return Response.status(400);//.entity(e.getMessage()).build();
-//        } catch (GeneralAccountProblemException e) {
-//            return Response.status(400).entity(e.getMessage()).build();
-//        } catch (AccountAlreadyExistsException e) {
-//            return Response.status(400).entity(e.getMessage()).build();
-//        }
-//    }
 
     @GET
     @Path("product")
     @UnitOfWork
-    public ProductEntity acc(@QueryParam("q") int id){
-//        AccountEntity accountEntity = new AccountEntity();
-//        accountEntity.setEmail("abc");
-//        accountEntity.setPassword("abc");
-//        accountEntity.setActive(true);
-//        accountEntity.setSalt("abc");
-//        RoleEntity roleEntity = new RoleEntity();
-//        roleEntity.setName("admin");
-        ProductEntity productEntity = new ProductEntity();
-        productEntity.setName("abc");
-        productEntity.setManufacturer("abc");
-        productEntity.setPrice((float) 10.5);
-        productEntity.setAmount(100);
-        //productDAO.create(productEntity);
-        return productDAO.findById((long) 1);
+    public Product getProduct(@QueryParam("q") int id){
+        return Wrapper.wrapProduct(productDAO.findById((long) 1));
+    }
+
+    @GET
+    @Path("products")
+    @Timed
+    @UnitOfWork
+    public List<Product> getAllProducts(){
+        List<Product> products = new ArrayList<>();
+        for (ProductEntity productEntity:productDAO.findAll()) {
+            products.add(Wrapper.wrapProduct(productEntity));
+        }
+        return products;
+    }
+
+    @GET
+    @Path("account")
+    @UnitOfWork
+    public Object getAccount(@QueryParam("q") String email) throws GeneralAccountProblemException {
+        if (accountDAO.findByEmail(email).isPresent()) {
+            return Wrapper.wrapAccount(accountDAO.findByEmail(email).get());
+        }
+        throw new GeneralAccountProblemException("Account doesn't exist");
+    }
+    @GET
+    @Path("account/id")
+    @UnitOfWork
+    public Account getAccountId(@QueryParam("q") Long id){
+        return Wrapper.wrapAccount(accountDAO.findById(id));
     }
 
     @POST
     @Path("create/account")
     @UnitOfWork
     public Account createAccount(Account account){
-        AccountEntity accountEntity = new AccountEntity();
-        accountEntity.setEmail(account.getEmail());
-        accountEntity.setPassword(account.getPassword());
+        AccountEntity accountEntity = Wrapper.wrapAccount(account);
         accountEntity.setCreated(new Date());
         accountEntity.setActive(true);
         accountEntity.setSalt("adssfgasdas");
         accountDAO.create(accountEntity);
         return account;
+    }
+
+    @POST
+    @Path("create/product")
+    @UnitOfWork
+    public Product createProduct(Product product){
+        ProductEntity productEntity = Wrapper.wrapProduct(product);
+        productEntity.setCreated(new Date());
+        productEntity.setUpdated(new Date());
+        productDAO.create(productEntity);
+        return product;
+    }
+
+    @PUT
+    @Path("update/product")
+    @UnitOfWork
+    public Product updateProduct(Product product){
+        ProductEntity productEntity = Wrapper.wrapProduct(product);
+        productEntity.setUpdated(new Date());
+        productDAO.update(productEntity);
+        return product;
+    }
+
+    @DELETE
+    @Path("delete/product")
+    @UnitOfWork
+    public Product deleteProduct(@QueryParam("q") Long id){
+        productDAO.delete(productDAO.findById(id));
+        Product product = new Product();
+        return product;
+    }
+
+    @POST
+    @Path("google")
+    @UnitOfWork
+    public String verify(String idToken) throws GeneralSecurityException, IOException {
+        System.out.println(idToken);
+        GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(transport, JacksonFactory.getDefaultInstance())
+                .setAudience(Collections.singletonList("906890859746-9iavesjt2dve9irplpt5hg31m859ekkk.apps.googleusercontent.com"))
+                .build();
+        String id = idToken.replace("\"", "");
+        GoogleIdToken token = verifier.verify(id);
+
+        if (token != null) {
+            Payload payload = token.getPayload();
+
+            System.out.println(payload.getEmail());
+            GoogleEntity googleEntity = new GoogleEntity();
+            googleEntity.setUserId(payload.getSubject());
+            googleEntity.setEmail(payload.getEmail());
+            googleEntity.setLogged(new Date());
+            googleDAO.create(googleEntity);
+            return "true";
+            //return Response.status(Response.Status.ACCEPTED).build();
+        } else {
+            return null;
+        }
     }
 }

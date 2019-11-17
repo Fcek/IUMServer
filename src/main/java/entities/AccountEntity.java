@@ -4,6 +4,23 @@ import javax.persistence.*;
 import java.util.Date;
 @Table(name = "account")
 @Entity
+@NamedQueries({
+        @NamedQuery(
+                name = "de.clickhealthy.manage.db.accountEntity.findAll",
+                query = "SELECT i FROM AccountEntity i"),
+        @NamedQuery(
+                name = "de.clickhealthy.manage.db.accountEntity.findById",
+                query = "SELECT i FROM AccountEntity i WHERE i.id = :id"),
+        @NamedQuery(
+                name = "de.clickhealthy.manage.db.accountEntity.findByEmail",
+                query = "SELECT i FROM AccountEntity i WHERE i.email = :email"),
+        @NamedQuery(
+                name = "de.clickhealthy.manage.db.accountEntity.size",
+                query = "SELECT COUNT(*) FROM AccountEntity i"),
+        @NamedQuery(
+                name = "de.clickhealthy.manage.db.accountEntity.isActive",
+                query = "SELECT active FROM AccountEntity i where email = :email")
+})
 public class AccountEntity {
 
     @Id
@@ -27,6 +44,18 @@ public class AccountEntity {
 
     @Column(name = "created")
     private Date created;
+
+
+    @Column(name = "role")
+    private String role;
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 
     public long getId() {
         return id;

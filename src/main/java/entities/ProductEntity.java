@@ -1,9 +1,15 @@
 package entities;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Table(name = "products")
 @Entity
+@NamedQueries({
+        @NamedQuery(
+                name = "db.productEntity.findAll",
+                query = "SELECT i FROM ProductEntity i"),
+})
 public class ProductEntity {
 
     @Id
@@ -21,6 +27,28 @@ public class ProductEntity {
 
     @Column(name = "amount")
     private int amount;
+
+    @Column(name = "created")
+    private Date created;
+
+    @Column(name = "updated")
+    private Date updated;
+
+    public Date getCreated() {
+        return created;
+    }
+
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+
+    public Date getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(Date updated) {
+        this.updated = updated;
+    }
 
     public long getId() {
         return id;
