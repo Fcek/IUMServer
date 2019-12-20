@@ -13,6 +13,7 @@ public class Wrapper {
         product.setManufacturer(productEntity.getManufacturer());
         product.setName(productEntity.getName());
         product.setPrice(productEntity.getPrice());
+        product.setUpdated(productEntity.getUpdated());
         return product;
     }
     public static ProductEntity wrapProduct(Product product){
@@ -22,6 +23,7 @@ public class Wrapper {
         productEntity.setManufacturer(product.getManufacturer());
         productEntity.setName(product.getName());
         productEntity.setPrice(product.getPrice());
+        productEntity.setUpdated(product.getUpdated());
         return productEntity;
     }
     public static Account wrapAccount(AccountEntity accountEntity){
@@ -34,11 +36,9 @@ public class Wrapper {
     }
     public static AccountEntity wrapAccount(Account account){
         AccountEntity accountEntity = new AccountEntity();
-        accountEntity.setId(account.getId());
         accountEntity.setEmail(account.getEmail());
         accountEntity.setPassword(account.getPassword());
         accountEntity.setRole(account.getRole());
         return accountEntity;
     }
-
 }

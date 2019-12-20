@@ -30,7 +30,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
-
+//TODO: RESOLVE SYNC DATA
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
@@ -62,7 +62,7 @@ public class MainResource {
         for (ProductEntity productEntity:productDAO.findAll()) {
             products.add(Wrapper.wrapProduct(productEntity));
         }
-        return products;
+        return products;  //TODO: MAKE IT RETURN SORTED LIST BY ID
     }
 
     @GET
@@ -98,8 +98,6 @@ public class MainResource {
     @UnitOfWork
     public Product createProduct(Product product){
         ProductEntity productEntity = Wrapper.wrapProduct(product);
-        productEntity.setCreated(new Date());
-        productEntity.setUpdated(new Date());
         productDAO.create(productEntity);
         return product;
     }

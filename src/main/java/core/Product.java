@@ -2,6 +2,8 @@ package core;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Date;
+
 public class Product {
 
     @JsonProperty("id")
@@ -14,6 +16,26 @@ public class Product {
     private float price;
     @JsonProperty("amount")
     private int amount;
+    @JsonProperty("created")
+    private Date created;
+    @JsonProperty("updated")
+    private Date updated;
+    @JsonProperty("created")
+    public Date getCreated() {
+        return created;
+    }
+    @JsonProperty("created")
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+    @JsonProperty("updated")
+    public Date getUpdated() {
+        return updated;
+    }
+    @JsonProperty("updated")
+    public void setUpdated(Date updated) {
+        this.updated = updated;
+    }
     @JsonProperty("id")
     public long getId() {
         return id;
