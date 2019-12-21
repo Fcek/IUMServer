@@ -14,7 +14,7 @@ public class ProductEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(name = "name")
     private String name;
@@ -91,4 +91,6 @@ public class ProductEntity {
     }
 
 
+    public void setId(Long aLong) {
+    }
 }

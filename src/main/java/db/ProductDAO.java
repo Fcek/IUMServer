@@ -4,6 +4,7 @@ import entities.ProductEntity;
 import io.dropwizard.hibernate.AbstractDAO;
 import org.hibernate.SessionFactory;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public class ProductDAO extends AbstractDAO<ProductEntity> {
@@ -29,6 +30,10 @@ public class ProductDAO extends AbstractDAO<ProductEntity> {
     }
 
     public ProductEntity update(ProductEntity productEntity) {
+        return persist(productEntity);
+    }
+
+    public ProductEntity saveOrUpdate(ProductEntity productEntity){
         return persist(productEntity);
     }
 

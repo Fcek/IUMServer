@@ -20,6 +20,8 @@ public class Product {
     private Date created;
     @JsonProperty("updated")
     private Date updated;
+    @JsonProperty("serverid")
+    private Integer serverId;
     @JsonProperty("created")
     public Date getCreated() {
         return created;
@@ -75,5 +77,13 @@ public class Product {
     @JsonProperty("amount")
     public void setAmount(int amount) {
         this.amount = amount;
+    }
+    @JsonProperty("serverid")
+    public Integer getServerId() {
+        return serverId;
+    }
+    @JsonProperty("serverid")
+    public void setServerId(Integer serverId) {
+        this.serverId = serverId;
     }
 }

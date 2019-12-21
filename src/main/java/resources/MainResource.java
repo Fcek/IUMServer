@@ -9,6 +9,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import core.Account;
 import core.Product;
+import core.Synchronize;
 import db.AccountDAO;
 import db.GoogleDAO;
 import db.ProductDAO;
@@ -146,5 +147,48 @@ public class MainResource {
         } else {
             return null;
         }
+    }
+
+    @PUT
+    @Path("update")
+    @UnitOfWork
+    public Response synchApp(Synchronize synchronize) {
+        List<Product> offlineProducts = synchronize.getProductList();
+        List<Integer> deleted = synchronize.getDeleted();
+        for (int i : deleted) {
+            ProductEntity serverProduct = productDAO.findById(Long.valueOf(i));
+            if(serverProduct != null){
+                productDAO.delete(serverProduct);
+            }
+        }
+
+        for (Product p : offlineProducts) {
+            ProductEntity productEntity = Wrapper.wrapProduct(p);
+            if(p.getServerId() != null || p.getServerId() != 0){
+                ProductEntity serverProduct = productDAO.findById(Long.valueOf(p.getServerId()));
+                if(serverProduct != null){
+                    if(serverProduct.getUpdated().before(p.getUpdated()) && p.getUpdated().after(serverProduct.getUpdated())){
+                        productEntity.setUpdated(p.getUpdated());
+                        productEntity.setName(p.getName());
+                        productEntity.setManufacturer(p.getManufacturer());
+                        productEntity.setPrice(p.getPrice());
+                    } else {
+                        productEntity.setUpdated(serverProduct.getUpdated());
+                        productEntity.setName(serverProduct.getName());
+                        productEntity.setManufacturer(serverProduct.getManufacturer());
+                        productEntity.setPrice(serverProduct.getPrice());
+                    }
+                    productEntity.setCreated(serverProduct.getCreated());
+                    productEntity.setId(p.getServerId());
+                    productEntity.setAmount(Math.abs(serverProduct.getAmount()-productEntity.getAmount()));
+                } else {
+
+                }
+            } else {
+                productEntity.setId(null);
+            }
+            productDAO.saveOrUpdate(productEntity);
+        }
+
     }
 }
