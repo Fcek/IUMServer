@@ -9,6 +9,7 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import core.Account;
 import core.Product;
+import core.Ssid;
 import core.Synchronize;
 import db.AccountDAO;
 import db.GoogleDAO;
@@ -22,7 +23,6 @@ import wrapper.Wrapper;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -31,7 +31,6 @@ import java.util.Date;
 import java.util.List;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
-//TODO: RESOLVE SYNC DATA
 
 @Path("/")
 @Produces(MediaType.APPLICATION_JSON)
@@ -40,6 +39,7 @@ public class MainResource {
     private final ProductDAO productDAO;
     final NetHttpTransport transport = GoogleNetHttpTransport.newTrustedTransport();
     private final GoogleDAO googleDAO;
+    private final List<Ssid> ssids = new ArrayList<>();
 
     public MainResource(AccountDAO accountDAO, ProductDAO productDAO, GoogleDAO googleDAO) throws GeneralSecurityException, IOException {
         this.accountDAO = accountDAO;
@@ -63,7 +63,7 @@ public class MainResource {
         for (ProductEntity productEntity:productDAO.findAll()) {
             products.add(Wrapper.wrapProduct(productEntity));
         }
-        return products;  //TODO: MAKE IT RETURN SORTED LIST BY ID
+        return products;
     }
 
     @GET
@@ -98,7 +98,13 @@ public class MainResource {
     @Path("create/product")
     @UnitOfWork
     public Product createProduct(Product product){
-        ProductEntity productEntity = Wrapper.wrapProduct(product);
+        ProductEntity productEntity = new ProductEntity();
+        productEntity.setAmount(product.getAmount());
+        productEntity.setManufacturer(product.getManufacturer());
+        productEntity.setName(product.getName());
+        productEntity.setPrice(product.getPrice());
+        productEntity.setUpdated(product.getUpdated());
+        productEntity.setCreated(new Date());
         productDAO.create(productEntity);
         return product;
     }
@@ -152,43 +158,54 @@ public class MainResource {
     @PUT
     @Path("update")
     @UnitOfWork
-    public Response synchApp(Synchronize synchronize) {
+    public Synchronize synchApp(Synchronize synchronize) {
         List<Product> offlineProducts = synchronize.getProductList();
         List<Integer> deleted = synchronize.getDeleted();
-        for (int i : deleted) {
-            ProductEntity serverProduct = productDAO.findById(Long.valueOf(i));
-            if(serverProduct != null){
-                productDAO.delete(serverProduct);
+
+        for (Ssid ssid : ssids) {
+            if (ssid.getSsid().equals(synchronize.getSsid())){
+                return synchronize;
+            }
+            if(new Date().getTime() - ssid.getDate().getTime() > 5*60*1000){
+                ssids.remove(ssid);
+            }
+        }
+        ssids.add(new Ssid(synchronize.getSsid(), new Date()));
+
+        for (int i : deleted) { //loop to delete products
+            ProductEntity serverProduct = productDAO.findById((long) i);
+            if (serverProduct != null) {
+                productDAO.delete(productDAO.findById((long) i));
             }
         }
 
         for (Product p : offlineProducts) {
             ProductEntity productEntity = Wrapper.wrapProduct(p);
-            if(p.getServerId() != null || p.getServerId() != 0){
+            if (p.getServerId() != null && p.getServerId() != 0) { //if product is in db
                 ProductEntity serverProduct = productDAO.findById(Long.valueOf(p.getServerId()));
-                if(serverProduct != null){
-                    if(serverProduct.getUpdated().before(p.getUpdated()) && p.getUpdated().after(serverProduct.getUpdated())){
-                        productEntity.setUpdated(p.getUpdated());
-                        productEntity.setName(p.getName());
-                        productEntity.setManufacturer(p.getManufacturer());
-                        productEntity.setPrice(p.getPrice());
+                if (serverProduct != null) { // if is not in db then dont insert it to the db
+                    if (serverProduct.getUpdated().before(p.getUpdated()) && p.getUpdated().after(serverProduct.getUpdated())) { // check which version is newer
+                        serverProduct.setUpdated(p.getUpdated());
+                        serverProduct.setName(p.getName());
+                        serverProduct.setManufacturer(p.getManufacturer());
+                        serverProduct.setPrice(p.getPrice());
                     } else {
-                        productEntity.setUpdated(serverProduct.getUpdated());
-                        productEntity.setName(serverProduct.getName());
-                        productEntity.setManufacturer(serverProduct.getManufacturer());
-                        productEntity.setPrice(serverProduct.getPrice());
+                        serverProduct.setUpdated(serverProduct.getUpdated());
+                        serverProduct.setName(serverProduct.getName());
+                        serverProduct.setManufacturer(serverProduct.getManufacturer());
+                        serverProduct.setPrice(serverProduct.getPrice());
                     }
-                    productEntity.setCreated(serverProduct.getCreated());
-                    productEntity.setId(p.getServerId());
-                    productEntity.setAmount(Math.abs(serverProduct.getAmount()-productEntity.getAmount()));
-                } else {
-
+                    serverProduct.setCreated(serverProduct.getCreated());
+                    serverProduct.setId(p.getServerId());
+                    serverProduct.setAmount(serverProduct.getAmount() + p.getCount());
+                    productDAO.update(serverProduct);
                 }
-            } else {
-                productEntity.setId(null);
+            } else if(p.getServerId() == 0){
+                productEntity = Wrapper.wrapProduct1(p);
+                productEntity.setCreated(p.getUpdated());
+                productDAO.create(productEntity);
             }
-            productDAO.saveOrUpdate(productEntity);
         }
-
+        return synchronize;
     }
 }
